@@ -1,3 +1,4 @@
-require "./app/app.rb"
+require "./app/base"
+require "./controllers/incoming-message"
 
 run Sinatra::Application

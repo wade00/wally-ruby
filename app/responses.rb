@@ -40,8 +40,9 @@ module WallyApp
     end
 
     def website_information
-      websites = @RECYCLING_INFO_HASH[:website][@index].split(',')
-      websites.length > 1 ? "Their websites are #{websites.join(',')}." : "Their website is #{websites[0]}"
+      websites = @RECYCLING_INFO_HASH[:website][@index]
+      return unless websites
+      websites.split(',').length > 1 ? "Their websites are #{websites}." : "Their website is #{websites[0]}"
     end
 
   end
