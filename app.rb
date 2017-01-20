@@ -15,7 +15,7 @@ RECYCLING_INFO_HASH = {
 
 def setup
   set_recycling_info_hash
-  @material = 'carboard'
+  @material = 'plastc'
   puts query_results
 end
 
@@ -28,6 +28,31 @@ private
   def additional_notes
     note = RECYCLING_INFO_HASH[:please_note][@index]
     note ? "Please note that #{note.downcase}#{note.split('').last == '.' ? '' : '.'}" : ""
+  end
+
+  def fuzzy_match
+    matches = []
+    RECYCLING_INFO_HASH[:material].each { |m| matches << m if fuzzy_match_score(@material, m) > 0.4 }
+    return suggested_material(matches) if matches.length > 0
+  end
+
+  def fuzzy_match_score(str1, str2)
+    str1.downcase!
+    pairs1 = (0..str1.length-2).collect {|i| str1[i,2]}.reject { |pair| pair.include? " " }
+    str2.downcase!
+    pairs2 = (0..str2.length-2).collect {|i| str2[i,2]}.reject { |pair| pair.include? " " }
+    union = pairs1.size + pairs2.size
+    intersection = 0
+    pairs1.each do |p1|
+      0.upto(pairs2.size-1) do |i|
+        if p1 == pairs2[i]
+          intersection += 1
+          pairs2.slice!(i)
+          break
+        end
+      end
+    end
+    (2.0 * intersection) / union
   end
 
   def material_index
@@ -61,6 +86,10 @@ private
     end
   end
 
+  def suggested_material(materials)
+    "I'm not sure if #{@material} can be recycled. You can try searching for any of these materials, though: #{materials.join(', ')}."
+  end
+
   def unacceptable_material_response
     alternative_outlet = RECYCLING_INFO_HASH[:alternative_outlet][@index]
     return "No, #{@material} cannot be recycled." unless alternative_outlet
@@ -76,32 +105,6 @@ private
   def website_information
     websites = RECYCLING_INFO_HASH[:website][@index].split(',')
     websites.length > 1 ? "Their websites are #{websites.join(',')}." : "Their website is #{websites[0]}"
-  end
-
-  def fuzzy_match
-    matches = []
-    RECYCLING_INFO_HASH[:material].each { |m| matches << m if fuzzy_match_score(@material, m) > 0.5 }
-    puts matches.inspect
-    return nil
-  end
-
-  def fuzzy_match_score(str1, str2)
-    str1.downcase!
-    pairs1 = (0..str1.length-2).collect {|i| str1[i,2]}.reject { |pair| pair.include? " "}
-    str2.downcase!
-    pairs2 = (0..str2.length-2).collect {|i| str2[i,2]}.reject { |pair| pair.include? " "}
-    union = pairs1.size + pairs2.size
-    intersection = 0
-    pairs1.each do |p1|
-      0.upto(pairs2.size-1) do |i|
-        if p1 == pairs2[i]
-          intersection += 1
-          pairs2.slice!(i)
-          break
-        end
-      end
-    end
-    (2.0 * intersection) / union
   end
 
 setup
